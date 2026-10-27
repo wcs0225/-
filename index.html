@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简历智诊｜简历打分H5工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        }
+        html{
+            scroll-behavior: smooth;
+        }
+        body {
+            background: linear-gradient(135deg, #f0f4ff 0%, #eef2ff 100%);
+            padding: 24px 14px;
+        }
+        .container {
+            max-width: 920px;
+            margin: 0 auto;
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards;
+        }
+        @keyframes fadeIn {
+            to {opacity:1; transform: translateY(0);}
+            from {opacity:0; transform: translateY(12px);}
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 30px 26px;
+            margin-bottom: 26px;
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.08);
+            transition: 0.3s ease;
+        }
+        .card:hover{
+            box-shadow: 0 8px 26px rgba(37, 99, 235, 0.12);
+        }
+        h1 {
+            text-align: center;
+            color: #111827;
+            margin-bottom: 34px;
+            font-size: 28px;
+            background: linear-gradient(90deg,#2563eb,#60a5fa);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        h2 {
+            color: #1d4ed8;
+            margin: 28px 0 12px;
+            border-left: 5px solid #3b82f6;
+            padding-left: 14px;
+            font-size: 20px;
+        }
+        p {
+            line-height: 1.8;
+            color: #374151;
+            margin-bottom: 14px;
+        }
+        ul {
+            margin: 12px 0 16px 26px;
+            line-height: 1.8;
+            color: #374151;
+        }
+        .note {
+            background-color: #eff6ff;
+            padding: 16px 18px;
+            border-radius: 12px;
+            margin: 20px 0;
+            color: #1e40af;
+        }
+
+        /* 交互工具区域 */
+        .tool-title {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 22px;
+            color: #111827;
+        }
+        textarea {
+            width: 100%;
+            min-height: 230px;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 15px;
+            resize: vertical;
+            line-height: 1.75;
+            transition: 0.25s;
+        }
+        textarea:focus{
+            outline: none;
+            border-color:#3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+        .btn-row {
+            margin: 14px 0;
+            display: flex;
+            gap:12px;
+            flex-wrap: wrap;
+        }
+        .btn-small {
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .btn-small:active{transform:scale(0.96);}
+        .btn-demo {
+            background-color: #e5e7eb;
+            color:#111;
+        }
+        .btn-demo:hover {background:#d1d5db;}
+        .btn-question {
+            background: linear-gradient(135deg,#fbbf24,#f59e0b);
+            color:#111;
+        }
+        .btn-question:hover {filter:brightness(1.05);}
+        .btn-main {
+            width:100%;
+            padding:15px;
+            background: linear-gradient(135deg,#2563eb,#3b82f6);
+            color:#fff;
+            border:none;
+            border-radius:12px;
+            font-size:17px;
+            cursor:pointer;
+            transition: all 0.25s;
+        }
+        .btn-main:hover {
+            filter:brightness(1.04);
+        }
+        .btn-main:active{transform:scale(0.98);}
+
+        .score-wrap {
+            text-align:center;
+            margin:24px 0;
+        }
+        .score-num {
+            font-size: 60px;
+            font-weight:bold;
+            color:#2563eb;
+        }
+        .rank-text {
+            font-size:17px;
+            color:#4b5563;
+            margin-top:6px;
+        }
+        .dim-item {
+            margin-bottom:16px;
+        }
+        .dim-head {
+            display:flex;
+            justify-content:space-between;
+            margin-bottom:7px;
+            font-weight:500;
+        }
+        .bar-outer {
+            height:12px;
+            background:#e5e7eb;
+            border-radius:6px;
+            overflow:hidden;
+        }
+        .bar-inner {
+            height:100%;
+            width:0;
+            transition: width 1s cubic-bezier(0.2,0.8,0.2,1);
+        }
+        .bar-good {background: linear-gradient(90deg,#22c55e,#4ade80);}
+        .bar-mid {background: linear-gradient(90deg,#f59e0b,#fbbf24);}
+        .bar-bad {background: linear-gradient(90deg,#ef4444,#f87171);}
+        .suggest-box {
+            margin-top:20px;
+            padding:18px;
+            background-color:#f9fafb;
+            border-radius:12px;
+            white-space:pre-line;
+            line-height:1.75;
+        }
+
+        /* 自定义弹窗（替代alert，小红书友好） */
+        .mask{
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.45);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            z-index:999;
+            opacity:0;
+            visibility:hidden;
+            transition:0.3s;
+        }
+        .mask.show{
+            opacity:1;
+            visibility:visible;
+        }
+        .modal{
+            background:#fff;
+            border-radius:16px;
+            width:85%;
+            max-width:420px;
+            padding:26px;
+            transform:scale(0.9);
+            transition:0.3s;
+        }
+        .mask.show .modal{
+            transform:scale(1);
+        }
+        .modal h3{
+            margin-bottom:14px;
+            color:#111;
+        }
+        .modal p{
+            font-size:16px;
+        }
+        .modal-close{
+            margin-top:18px;
+            width:100%;
+            padding:10px;
+            border:none;
+            border-radius:8px;
+            background:#2563eb;
+            color:white;
+            cursor:pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!--商业计划书-->
+    <div class="card">
+        <h1>简历智诊 商业计划书</h1>
+        <h2>一、项目简介</h2>
+        <p>简历智诊面向在校大学生，一款本地运行的简历自查与模拟面试网页工具。本项目为纯前端静态原型，全部运算在浏览器本地执行，无需后端服务器。用户粘贴简历文本，系统通过规则算法自动多维度打分，输出简历优化建议，同时支持随机抽取模拟面试题。后续正式版计划接入AI大模型，提供智能润色、人机模拟面试完整能力。</p>
+
+        <h2>二、市场背景与需求</h2>
+        <p>在校学生准备实习、校招时普遍不会优化简历，市面上付费简历修改价格偏高，学生缺少低成本自检工具。本产品零成本帮助学生自查简历问题，同时提供面试刷题素材。</p>
+
+        <h2>三、产品原型功能</h2>
+        <ul>
+            <li>简历文本输入，一键载入示例简历；</li>
+            <li>四大维度自动评分，平滑动画进度条展示得分；</li>
+            <li>数字滚动打分 + 评级输出，生成简历修改建议；</li>
+            <li>随机抽取应届生模拟面试题，优雅弹窗展示；</li>
+            <li>全部数据本地浏览器处理，不上传用户简历，保护隐私。</li>
+        </ul>
+
+        <h2>四、技术实现</h2>
+        <p>技术栈：HTML + CSS + JavaScript，单文件静态H5。</p>
+        <p>部署方式：GitHub Pages / 国内H5托管，免费托管，无需购买服务器。</p>
+        <div class="note">
+            <strong>风险预案：</strong>GitHub国内访问不稳定，答辩可直接使用本地HTML文件离线演示。当前原型仅规则算法，未接入大模型API。
+        </div>
+
+        <h2>五、运营与商业模式</h2>
+        <p>面向高校学生推广，基础功能永久免费。未来接入大模型后可提供增值服务：AI简历改写、完整对话式模拟面试。项目前期几乎无硬件成本。</p>
+
+        <h2>六、风险分析</h2>
+        <ul>
+            <li>规则原型分析能力有限，后续接入大模型提升效果；</li>
+            <li>线上网站访问不稳定，保留本地离线演示方案；</li>
+            <li>坚持本地运算，不收集用户简历原始信息，保障隐私。</li>
+        </ul>
+
+        <h2>七、未来规划</h2>
+        <p>1.接入大模型API，实现AI逐句简历诊断改写；</p>
+        <p>2.完善模拟面试模块，实现人机问答交互；</p>
+        <p>3.增加简历模板下载功能；</p>
+        <p>4.校园投放，收集学生反馈持续迭代产品。</p>
+    </div>
+
+    <!--交互H5工具-->
+    <div class="card">
+        <div class="tool-title">📄简历智诊 交互原型演示</div>
+        <textarea id="resumeInput" placeholder="请把简历粘贴在这里，点击载入示例简历快速体验效果"></textarea>
+        <div class="btn-row">
+            <button class="btn-small btn-demo" onclick="loadSample()">载入示例简历</button>
+            <button class="btn-small btn-question" onclick="popQuestion()">🎲抽取面试题</button>
+        </div>
+        <button class="btn-main" onclick="startDiagnose()">开始简历诊断打分</button>
+
+        <div class="score-wrap">
+            <div class="score-num" id="totalScore">0</div>
+            <div class="rank-text" id="rankText">等待诊断</div>
+        </div>
+
+        <div id="dimContainer"></div>
+        <div class="suggest-box" id="suggestBox"></div>
+    </div>
+</div>
+
+<!--弹窗组件（小红书友好，替换alert）-->
+<div class="mask" id="modalMask">
+    <div class="modal">
+        <h3>🎤模拟面试题</h3>
+        <p id="modalText"></p>
+        <button class="modal-close" onclick="closeModal()">知道啦</button>
+    </div>
+</div>
+
+<script>
+//面试题库
+const questionList = [
+    "请简单做一分钟自我介绍。",
+    "说说你的优点以及缺点。",
+    "你为什么想要应聘这个岗位？",
+    "讲讲你经历过最有成就感的一件事。",
+    "工作遇到意见冲突，你会怎么处理？",
+    "你的未来两到三年职业规划是什么？",
+    "你对薪资的期待是怎样？",
+    "说说你的项目经历，你承担什么角色？",
+    "如果任务压力很大，你如何处理？",
+    "你还有什么问题想要向面试官提问？"
+];
+
+//示例简历文本
+const sampleResume = `李四
+联系电话：13512345678
+邮箱：lisi@qq.com
+求职意向：运营实习生
+
+教育背景
+XX大学 工商管理专业 本科 2023‑2027
+
+校园经历
+校新媒体部干事，负责公众号推文编辑排版，组织线上宣传活动。
+
+实习经历
+本地传媒公司实习，协助内容整理，参与活动素材收集。
+
+技能证书
+英语四级，熟练使用Word、Excel、PPT，基础PS。`;
+
+//弹窗控制
+function popQuestion(){
+    const idx = Math.floor(Math.random() * questionList.length);
+    document.getElementById("modalText").innerText = questionList[idx];
+    document.getElementById("modalMask").classList.add("show");
+}
+function closeModal(){
+    document.getElementById("modalMask").classList.remove("show");
+}
+
+//载入示例简历
+function loadSample(){
+    document.getElementById('resumeInput').value = sampleResume;
+}
+
+//数字滚动动画
+function animateScore(targetDom, start, end, duration=1000){
+    let startTime = null;
+    function step(timestamp){
+        if(!startTime) startTime = timestamp;
+        let progress = (timestamp - startTime)/duration;
+        if(progress>1) progress=1;
+        let cur = Math.floor(start + (end-start)*progress);
+        targetDom.innerText = cur;
+        if(progress<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+}
+
+//简历诊断主逻辑
+function startDiagnose(){
+    const inputDom = document.getElementById('resumeInput');
+    const text = inputDom.value.trim();
+    if(!text){
+        document.getElementById("modalText").innerText = "请粘贴简历内容，或者点击载入示例简历体验";
+        document.getElementById("modalMask").classList.add("show");
+        return;
+    }
+
+    //四个维度
+    const dimension = [
+        {max:20,name:"基础信息完整度"},
+        {max:25,name:"成果量化程度"},
+        {max:25,name:"表达专业度"},
+        {max:30,name:"结构与岗位匹配度"}
+    ];
+    let score = [0,0,0,0];
+    let tipsArr = [];
+
+    //维度1：基础信息
+    const hasPhone = /1[3-9]\d{9}/.test(text);
+    const hasEmail = /[\w]+@[\w]+\.[\w]+/.test(text);
+    score[0] = (hasPhone ?10:0)+(hasEmail?10:0);
+    if(!hasPhone) tipsArr.push("• 未检测到手机号，建议补充");
+    if(!hasEmail) tipsArr.push("• 未检测到邮箱地址");
+
+    //维度2：量化成果
+    const numMatches = text.match(/\d+/g) || [];
+    const numCount = numMatches.length;
+    score[1] = Math.min(numCount * 4, dimension[1].max);
+    if(numCount <=2 ) tipsArr.push("• 简历缺少数字、百分比等量化成果描述");
+
+    //维度3：动词评价
+    const weakWords = ["参与","协助","做过","帮忙"];
+    const strongWords = ["主导","策划","组织","优化","落地","提升"];
+    let weakCount = 0;
+    weakWords.forEach(w=>{if(text.includes(w)) weakCount++;});
+    score[2] = Math.max(dimension[2].max - weakCount*6, 0);
+    if(weakCount>0) tipsArr.push("• 少用参与、协助，尽量使用主导、策划等主动动词");
+
+    //维度4：结构完整性
+    const hasEdu = /教育|大学|本科/.test(text);
+    const hasExp = /实习|项目|经历/.test(text);
+    const hasSkill = /技能|证书|软件/.test(text);
+    let s4 = 0;
+    if(hasEdu)s4 +=10;
+    if(hasExp)s4 +=10;
+    if(hasSkill)s4 +=10;
+    score[3] = s4;
+    if(!hasEdu) tipsArr.push("• 缺失教育经历板块");
+    if(!hasExp) tipsArr.push("• 缺少实习或者项目经历");
+    if(!hasSkill) tipsArr.push("• 缺少技能证书相关描述");
+
+    //计算总分
+    let total = score[0]+score[1]+score[2]+score[3];
+    let levelText;
+    if(total >=85) levelText = "⭐优秀，简历质量较高";
+    else if(total >=70) levelText = "👍良好，小幅度修改即可投递";
+    else if(total >=60) levelText = "⚠及格，需要较大优化";
+    else levelText = "❗较差，建议重新梳理简历";
+
+    //数字滚动动画
+    animateScore(document.getElementById("totalScore"),0,total);
+    document.getElementById("rankText").innerText = levelText;
+
+    //渲染进度条（自带平滑拉长动画）
+    let dimHtml = "";
+    for(let i=0;i<4;i++){
+        const percent = score[i]/dimension[i].max;
+        let barClass = "bar-bad";
+        if(percent >=0.7) barClass="bar-good";
+        else if(percent >=0.4) barClass="bar-mid";
+
+        dimHtml += `
+        <div class="dim-item">
+            <div class="dim-head">
+                <span>${dimension[i].name}</span>
+                <span>${score[i]}/${dimension[i].max}</span>
+            </div>
+            <div class="bar-outer">
+                <div class="bar-inner ${barClass}" style="width:0%"></div>
+            </div>
+        </div>`;
+    }
+    document.getElementById("dimContainer").innerHTML = dimHtml;
+    //延迟触发进度条动画
+    setTimeout(()=>{
+        document.querySelectorAll(".bar-inner").forEach((el,idx)=>{
+            const pct = score[idx]/dimension[idx].max *100;
+            el.style.width = pct +"%";
+        })
+    },100)
+
+    //渲染建议
+    if(tipsArr.length === 0){
+        tipsArr.push("✅简历基础信息完整，可以继续丰富项目成果来提高分数！")
+    }
+    document.getElementById("suggestBox").innerText = "📋简历优化建议：\n"+tipsArr.join("\n");
+}
+</script>
+</body>
+</html>
